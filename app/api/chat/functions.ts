@@ -1,7 +1,20 @@
+import { GetResutlsByQUery } from "@/interfaces/search";
 import { ChatCompletionCreateParams } from "openai/resources/chat";
 
 export async function runFunction(name: string, args: any) {
   switch (name) {
+    case "knowledge_search":
+      return {
+        systemPrompt: `You are an intelligent assistant that helps users find the answer to their question, 
+        the response from the function is the contextual knowledge that you have, 
+        use it to answer the user's enquiry
+        Your answer should be in JSON format and should be in the following format
+        {
+          type: "knowledge_search",
+          answer: "The answer to the user's question",
+        }`,
+        content: await knowledge_search(args["query"]),
+      };
     case "get_top_stories":
       return {
         systemPrompt: `You are an intelligent assistant that helps get a the top stories from the news, 
@@ -37,6 +50,21 @@ export async function runFunction(name: string, args: any) {
 }
 
 export const functions: ChatCompletionCreateParams.Function[] = [
+  {
+    name: "knowledge_search",
+    description:
+      "This is an excellent tool for users looking for any information. The plugin provides high-quality and up to date information from the knowledge base. The user can write an enquiry or question and the plugin will retrieve the answer by searching through the latest version of the knowledgebase. ALWAYS use for any questions the user asks",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "the query to search for",
+        },
+      },
+      required: ["query"],
+    },
+  },
   {
     name: "get_top_stories",
     description:
@@ -90,4 +118,24 @@ async function get_story(id: number) {
     ...data,
     hnUrl: `https://news.ycombinator.com/item?id=${id}`,
   };
+}
+
+export async function knowledge_search(query: string) {
+  console.log("query", query);
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+
+  var raw = GetResutlsByQUery(query);
+
+  const response = await fetch(process.env.NEXT_PUBLIC_SEARCH_DISCOVER || "", {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  });
+
+  const responseJson = await response.json();
+
+  const data = responseJson.widgets[0].content;
+  return data;
 }
