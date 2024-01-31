@@ -78,7 +78,6 @@ async function get_top_stories(limit: number = 10) {
     ids.slice(0, limit).map((id: number) => get_story(id))
   );
 
-  console.log(stories);
   return stories;
 }
 
