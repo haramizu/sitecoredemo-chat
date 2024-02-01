@@ -47,14 +47,7 @@ export async function POST(req: Request) {
         return openai.chat.completions.create({
           model: "gpt-3.5-turbo",
           stream: true,
-          messages: [
-            {
-              role: "system",
-              content: result.systemPrompt,
-            },
-            ...messages,
-            ...newMessages,
-          ],
+          messages: [...messages, ...newMessages],
           functions,
         });
       }
