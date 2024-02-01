@@ -4,46 +4,11 @@ import { ChatCompletionCreateParams } from "openai/resources/chat";
 export async function runFunction(name: string, args: any) {
   switch (name) {
     case "knowledge_search":
-      return {
-        systemPrompt: `You are an intelligent assistant that helps users find the answer to their question, 
-        the response from the function is the contextual knowledge that you have, 
-        use it to answer the user's enquiry
-        Your answer should be in JSON format and should be in the following format
-        {
-          type: "knowledge_search",
-          answer: "The answer to the user's question",
-        }`,
-        content: await knowledge_search(args["query"]),
-      };
+      return await knowledge_search(args["query"]);
     case "get_top_stories":
-      return {
-        systemPrompt: `You are an intelligent assistant that helps get a the top stories from the news, 
-        the response from the function is the top stories
-        present it to the user
-        {
-          type: "top_stories",
-          data: [
-            {
-              Title: "The Title of the story",
-              image: "The image of the story if it exists",
-              url: "The url of the story",
-            }
-          ]
-        }`,
-        content: await get_top_stories(),
-      };
+      return await get_top_stories();
     case "get_story":
-      return {
-        systemPrompt: `You are an intelligent assistant that helps get a specific story from the news, 
-            the response from the function is the story
-            present it to the user
-            Your answer should be in JSON format and should be in the following format
-            {
-              type: "story",
-              summary: "The summary of the story",
-            }`,
-        content: await get_story(args["id"]),
-      };
+      return await get_story(args["id"]);
     default:
       return null;
   }
@@ -53,7 +18,7 @@ export const functions: ChatCompletionCreateParams.Function[] = [
   {
     name: "knowledge_search",
     description:
-      "This is an excellent tool for users looking for any information. The plugin provides high-quality and up to date information from the knowledge base. The user can write an enquiry or question and the plugin will retrieve the answer by searching through the latest version of the knowledgebase. ALWAYS use for any questions the user asks",
+      "Answer information about Sitecore's products documentation using Sitecore Search's API",
     parameters: {
       type: "object",
       properties: {
