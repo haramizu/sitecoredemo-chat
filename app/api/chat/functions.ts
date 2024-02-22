@@ -1,42 +1,35 @@
+import { GetResutlsByQUery } from "@/interfaces/search";
 import { ChatCompletionCreateParams } from "openai/resources/chat";
 
 export async function runFunction(name: string, args: any) {
   switch (name) {
+    case "knowledge_search":
+      return await knowledge_search(args["query"]);
     case "get_top_stories":
-      return {
-        systemPrompt: `You are an intelligent assistant that helps get a the top stories from the news, 
-        the response from the function is the top stories
-        present it to the user
-        {
-          type: "top_stories",
-          data: [
-            {
-              Title: "The Title of the story",
-              image: "The image of the story if it exists",
-              url: "The url of the story",
-            }
-          ]
-        }`,
-        content: await get_top_stories(),
-      };
+      return await get_top_stories();
     case "get_story":
-      return {
-        systemPrompt: `You are an intelligent assistant that helps get a specific story from the news, 
-            the response from the function is the story
-            present it to the user
-            Your answer should be in JSON format and should be in the following format
-            {
-              type: "story",
-              summary: "The summary of the story",
-            }`,
-        content: await get_story(args["id"]),
-      };
+      return await get_story(args["id"]);
     default:
       return null;
   }
 }
 
 export const functions: ChatCompletionCreateParams.Function[] = [
+  {
+    name: "knowledge_search",
+    description:
+      "Answer information about Sitecore's products documentation using Sitecore Search's API",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "the query to search for",
+        },
+      },
+      required: ["query"],
+    },
+  },
   {
     name: "get_top_stories",
     description:
@@ -78,7 +71,6 @@ async function get_top_stories(limit: number = 10) {
     ids.slice(0, limit).map((id: number) => get_story(id))
   );
 
-  console.log(stories);
   return stories;
 }
 
@@ -91,4 +83,24 @@ async function get_story(id: number) {
     ...data,
     hnUrl: `https://news.ycombinator.com/item?id=${id}`,
   };
+}
+
+export async function knowledge_search(query: string) {
+  console.log("query", query);
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+
+  var raw = GetResutlsByQUery(query);
+
+  const response = await fetch(process.env.NEXT_PUBLIC_SEARCH_DISCOVER || "", {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  });
+
+  const responseJson = await response.json();
+
+  const data = responseJson.widgets[0].content;
+  return data;
 }
